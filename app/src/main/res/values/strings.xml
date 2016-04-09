@@ -1,0 +1,67 @@
+<resources>
+    <string name="app_name">KeretaKu</string>
+    <string name="action_settings">Settings</string>
+    <string name="login">Login</string>
+    <string name="cek_tarif">Lihat Tarif</string>
+    <string name="station_from">Stasiun Asal</string>
+    <string name="station_to">Stasiun Tujuan</string>
+    <string name="harga_tiket">Harga Tiketnya :</string>
+
+    <string-array name="stasFrom">
+        <item>Bogor</item>
+        <item>Cilebut</item>
+        <item>Bojong Gede</item>
+        <item>Citayam</item>
+        <item>Depok</item>
+        <item>Depok Baru</item>
+        <item>Pondok Cina</item>
+        <item>Universitas Indonesia</item>
+        <item>Universitas Pancasila</item>
+        <item>Lenteng Agung</item>
+        <item>Tanjung Barat</item>
+        <item>Pasar Minggu</item>
+        <item>Pasar Minggu Baru</item>
+        <item>Duren Kalibata</item>
+        <item>Cawang</item>
+        <item>Tebet</item>
+        <item>Manggarai</item>
+        <item>Cikini</item>
+        <item>Gondangdia</item>
+        <item>Gambir</item>
+        <item>Juanda</item>
+        <item>Sawah Besar</item>
+        <item>Mangga Besar</item>
+        <item>Jayakarta</item>
+        <item>Jakarta Kota</item>
+    </string-array>
+
+    <string-array name="stasTo">
+        <item>Bogor</item>
+        <item>Cilebut</item>
+        <item>Bojong Gede</item>
+        <item>Citayam</item>
+        <item>Depok</item>
+        <item>Depok Baru</item>
+        <item>Pondok Cina</item>
+        <item>Universitas Indonesia</item>
+        <item>Universitas Pancasila</item>
+        <item>Lenteng Agung</item>
+        <item>Tanjung Barat</item>
+        <item>Pasar Minggu</item>
+        <item>Pasar Minggu Baru</item>
+        <item>Duren Kalibata</item>
+        <item>Cawang</item>
+        <item>Tebet</item>
+        <item>Manggarai</item>
+        <item>Cikini</item>
+        <item>Gondangdia</item>
+        <item>Gambir</item>
+        <item>Juanda</item>
+        <item>Sawah Besar</item>
+        <item>Mangga Besar</item>
+        <item>Jayakarta</item>
+        <item>Jakarta Kota</item>
+    </string-array>
+
+
+</resources>
