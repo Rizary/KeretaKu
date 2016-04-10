@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 import com.rizilab.keretaku.KeretaDb.*;
 import android.widget.Toast;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 
 /**
@@ -26,17 +28,15 @@ import java.util.ArrayList;
 public class AppActivity extends AppCompatActivity{
 
     Button button;
-    private int ticketPrice = 2000;
-    String iseng;
-    String stationNameFrom;
-    String stationNameTo;
+    private int ticketPrice = 0;
+    private int indexFrom = 0;
+    private int indexTo = 0;
 
     protected void onCreate(Bundle savedInstanceState) {
-
+        KeretaDbHelper mDbHelper = new KeretaDbHelper(getBaseContext());
         super.onCreate(savedInstanceState);
-        KeretaDbHelper mDbHelper = new KeretaDbHelper(this);
-        SQLiteDatabase realDB = mDbHelper.getWritableDatabase();
-        insertFirstDb(realDB);
+        SQLiteDatabase realDb = mDbHelper.getWritableDatabase();
+        realDb.beginTransaction();
 
         //Spinner stasiun Asal
         setContentView(R.layout.opening_app);
@@ -49,7 +49,7 @@ public class AppActivity extends AppCompatActivity{
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
 
-                stationNameFrom = spFrom.getSelectedItem().toString();
+                String stationNameFrom = spFrom.getSelectedItem().toString();
             }
 
             @Override
@@ -68,7 +68,8 @@ public class AppActivity extends AppCompatActivity{
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
 
-                stationNameTo = arg0.getItemAtPosition(arg2).toString();;
+                String stationNameTo = spTo.getSelectedItem().toString();
+
             }
 
             @Override
@@ -76,41 +77,43 @@ public class AppActivity extends AppCompatActivity{
 
             }
         });
-        //Spinner stasiun To
+        addListenerOnButton(mDbHelper, spFrom, spTo);
+        realDb.endTransaction();
 
-
-        //Spinner stasiun Awal
-
-        //Index spinner
-        int indexFrom = fromStationToIndex(mDbHelper, "Bogor", StationEntry.TABLE_NAME, StationEntry.COLUMN_NAME_STATION_ID, StationEntry.COLUMN_NAME_STATION_NAME);
-        int indexTo = fromStationToIndex(mDbHelper, "Tebet", StationEntry.TABLE_NAME, StationEntry.COLUMN_NAME_STATION_ID, StationEntry.COLUMN_NAME_STATION_NAME);
-        int finalDistance = countingDistance(mDbHelper, indexFrom, indexTo, StationEntry.COLUMN_NAME_STATION_ID, StationEntry.COLUMN_NAME_DISTANCE, StationEntry.TABLE_NAME);
-        double i  = 25.0;
-        while ( i < finalDistance){
-            i += 10.0;
-            ticketPrice += 1000;
-        }
-        iseng = stationNameFrom;
-        //ticketPrice = indexFrom;
-        addListenerOnButton();
     }
 
     //fungsi listener apabila tomboltarif ditekan
 
-    public void addListenerOnButton(){
+    public void addListenerOnButton(final KeretaDbHelper db, final Spinner from, final Spinner to){
         final Context context = this;
 
         button = (Button) findViewById(R.id.buttonTarif);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View arg0) {
+            public void onClick(View view) {
+                ticketPrice = 2000;
+                Intent myIntent = new Intent(view.getContext(), AppActivity.class);
                 TextView finalPrice = (TextView) findViewById(R.id.hasil_tarif);
-                finalPrice.setText(String.valueOf(ticketPrice));
+                String stationNameFrom = from.getSelectedItem().toString();
+                String stationNameTo = to.getSelectedItem().toString();
+                indexFrom = fromStationToIndex(db, stationNameFrom, StationEntry.TABLE_NAME, StationEntry.COLUMN_NAME_STATION_ID, StationEntry.COLUMN_NAME_STATION_NAME);
+                indexTo = fromStationToIndex(db, stationNameTo, StationEntry.TABLE_NAME, StationEntry.COLUMN_NAME_STATION_ID, StationEntry.COLUMN_NAME_STATION_NAME);
+                double finalDistance = countingDistance(db, indexFrom, indexTo, StationEntry.COLUMN_NAME_STATION_ID, StationEntry.COLUMN_NAME_DISTANCE, StationEntry.TABLE_NAME);
+                double i  = 25.0;
+                while ( i < finalDistance){
 
-                /*Intent intent = new Intent(context, StackActivity.class);
-                startActivity(intent);*/
+                    i += 10.0;
+                    ticketPrice += 1000;
+                }
+
+                Log.d("indexFrom :", Integer.toString(indexFrom));
+                Log.d("indexTo :", Integer.toString(indexTo));
+                Log.d("finalDistance :", Double.toString(finalDistance));
+
+                finalPrice.setText(String.valueOf(ticketPrice));
             }
         });
+
 
     }
 
@@ -139,29 +142,38 @@ public class AppActivity extends AppCompatActivity{
         SQLiteDatabase stationDatabase = stationData.getReadableDatabase();
         Cursor getStationIndex = stationDatabase.query(tableName, new String[]{dbField}, stationColumn + " = '" + stationString + "'", null, null, null, null);
 
-        Log.d("Andika", Integer.toString(getStationIndex.getCount()));
-
         if( getStationIndex != null && getStationIndex.moveToFirst()) {
             theIndex = getStationIndex.getInt(getStationIndex.getColumnIndexOrThrow(dbField));
             getStationIndex.close();
         }
 
-
-
         return theIndex;
     }
 
-    public int countingDistance (KeretaDbHelper stationData, int indexStationFrom, int indexStationTo, String dbField, String stationDistance, String tableName){//KeretaDbHelper dataStasiun, String stasiunAwal, String stasiunAkhir, String tableName, String dbField, String cols1, String cols2)
-        int totalDistance = 0;
-        if(indexStationFrom > indexStationTo) swapRoute(indexStationFrom, indexStationTo);
+    public double countingDistance (KeretaDbHelper stationData, int indexStationFrom, int indexStationTo, String dbField, String stationDistance, String tableName){//KeretaDbHelper dataStasiun, String stasiunAwal, String stasiunAkhir, String tableName, String dbField, String cols1, String cols2)
+        double totalDistance = 0.000;
+        if(indexStationFrom > indexStationTo) {
+            int temp = indexStationFrom;
+            indexStationFrom = indexStationTo;
+            indexStationTo = temp;
+        }
 
         SQLiteDatabase stationDatabase = stationData.getReadableDatabase();
 
-        Cursor stationCur = stationDatabase.rawQuery("SELECT SUM(" + stationDistance + ") FROM " + tableName + " WHERE " + dbField + " BETWEEN " + indexStationFrom + " AND " + indexStationTo, null);
-        if(stationCur.moveToFirst())
-        {
-            totalDistance = stationCur.getInt(0);
+        Cursor stationCur = stationDatabase.rawQuery("SELECT SUM(" + stationDistance + ") AS myTotal FROM " + tableName + " WHERE " + dbField + " BETWEEN " + indexStationFrom + " AND " + indexStationTo, null);
+        //SQLiteStatement stationCur = stationDatabase.compileStatement("SELECT SUM(" + stationDistance + ") AS myTotal FROM " + tableName + " WHERE " + dbField + " BETWEEN " + indexStationFrom + " AND " + indexStationTo + "");
+
+
+        if(stationCur != null && stationCur.moveToFirst()) {
+            totalDistance = stationCur.getDouble(stationCur.getColumnIndex("myTotal"));
+
+
+            stationCur.close();
+
         }
+        stationDatabase.close();
+
+        return totalDistance;
 
         /*SQLiteDatabase stationDatabase = dataStasiun.getReadableDatabase();
 
@@ -177,15 +189,6 @@ public class AppActivity extends AppCompatActivity{
         //hasilJarakStasiun.close();
         stationDatabase.close();
         */
-        stationCur.close();
-        return totalDistance;
-
-    }
-
-    public void swapRoute(int indexStationFrom, int indexStationTo) {
-        int temp = indexStationFrom;
-        indexStationFrom = indexStationTo;
-        indexStationTo = temp;
 
 
     }
@@ -197,50 +200,6 @@ public class AppActivity extends AppCompatActivity{
         return true;
     }
 
-    public void insertFirstDb (SQLiteDatabase db){
 
-        ContentValues stDb = new ContentValues();
-        // ZONA 1 (Bogor - Jakarta Kota)
-
-        String[] Rute = {"Bogor","Cilebut", "Bojong Gede", "Citayam", "Depok", "Depok Baru", "Pondok Cina", "Universitas Indonesia",
-                         "Universitas Pancasila", "Lenteng Agung", "Tanjung Barat", "Pasar Minggu", "Pasar Minggu Baru", "Duren Kalibata",
-                         "Cawang", "Tebet", "Manggarai", "Cikini", "Gondangdia", "Gambir", "Juanda", "Sawah Besar", "Mangga Besar", "Jayakarta",
-                         "Jakarta Kota"};
-        double[] Jarak = {7.518, 4.331, 5.197, 5.084, 1.741, 2.570, 1.109, 2.264, 1.029,
-                2.460, 3.301, 1.695, 1.509, 1.475, 1.301, 2.610, 1.606, 1.699, 1.000, 1.198, 0.707, 1.171, 1.020, 1.487,0.000};
-
-        for(int i = 0; i<Rute.length; i++) {
-            int j = 1 + i;
-            stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_ID, (j));
-            stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_NAME, Rute[i]);
-            stDb.put(KeretaDb.StationEntry.COLUMN_NAME_DISTANCE, Jarak[i]);
-            db.insert(StationEntry.TABLE_NAME, null, stDb);
-
-        }
-
-
-
-
-        // ZONA 2 (Manggarai Jakarta Kota)
-
-        // ZONA 3 (Manggarai Tanah Abang)
-
-        /*stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_FROM, "Manggarai");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_TO, "Sudirman");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_DISTANCE, 3186);
-
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_FROM, "Manggarai");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_TO, "Sudirman");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_DISTANCE, 3186);
-
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_FROM, "Manggarai");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_TO, "Sudirman");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_DISTANCE, 3186);
-
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_FROM, "Manggarai");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_STATION_TO, "Sudirman");
-        stDb.put(KeretaDb.StationEntry.COLUMN_NAME_DISTANCE, 3186);*/
-
-    }
 
 }
