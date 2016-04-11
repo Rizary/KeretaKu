@@ -1,6 +1,8 @@
 package com.rizilab.keretaku;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -46,5 +48,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setMessage("Apa kalian ingin Exit?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                       MainActivity.this.finish();
+
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 }

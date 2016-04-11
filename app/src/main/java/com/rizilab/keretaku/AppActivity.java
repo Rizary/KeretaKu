@@ -1,7 +1,10 @@
 package com.rizilab.keretaku;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -25,7 +28,7 @@ import java.util.ArrayList;
 /**
  * Created by R on 4/8/16.
  */
-public class AppActivity extends AppCompatActivity{
+public class AppActivity extends Activity {
 
     Button button;
     private int ticketPrice = 0;
@@ -198,7 +201,9 @@ public class AppActivity extends AppCompatActivity{
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+
     }
+
 
 
 
